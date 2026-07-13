@@ -22,7 +22,7 @@
 
     <section class="creator-layout">
       <aside class="creator-sidebar asset-sidebar">
-        <div class="sidebar-heading"><p class="eyebrow">Your library</p><h2>Add an image</h2><p>Choose any original from your profile.</p></div>
+        <div class="sidebar-heading"><p class="eyebrow">Your library</p><h2>Add an image</h2><p>Choose an original or completed processed image from your profile.</p></div>
         <div id="assetLoading" class="asset-message">Loading your images…</div>
         <div id="assetEmpty" class="asset-message" hidden>No uploaded images yet. Add images from the workspace first.</div>
         <div id="assetGrid" class="asset-grid"></div>
@@ -37,7 +37,7 @@
         <div class="canvas-frame">
           <canvas id="thumbnailCanvas" width="1080" height="1920" aria-label="Thumbnail editing canvas"></canvas>
         </div>
-        <p class="canvas-help"><span>Drag</span> to move · <span>Corner handles</span> resize images · <span>Delete</span> removes a selected layer</p>
+        <p class="canvas-help"><span>Drag</span> to move · <span>Corner handles</span> resize images and text · <span>Delete</span> removes a selected layer</p>
       </div>
 
       <aside class="creator-sidebar controls-sidebar">
@@ -60,7 +60,7 @@
           <p class="eyebrow">Typography</p><h2>Add text</h2>
           <textarea id="textContent" rows="2" maxlength="160" placeholder="Your headline"></textarea>
           <div class="text-control-grid">
-            <div><label for="fontFamily">Font</label><select id="fontFamily"><option value="Impact">Impact</option><option value="Manrope">Manrope</option><option value="DM Sans">DM Sans</option><option value="Arial Black">Arial Black</option><option value="Trebuchet MS">Trebuchet</option><option value="Georgia">Georgia</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option></select></div>
+            <div><label for="fontFamily">Font</label><select id="fontFamily" style="font-family:Impact"><option value="Impact" style="font-family:Impact">Impact</option><option value="Manrope" style="font-family:Manrope">Manrope</option><option value="DM Sans" style="font-family:'DM Sans'">DM Sans</option><option value="Arial Black" style="font-family:'Arial Black'">Arial Black</option><option value="Trebuchet MS" style="font-family:'Trebuchet MS'">Trebuchet</option><option value="Georgia" style="font-family:Georgia">Georgia</option><option value="Courier New" style="font-family:'Courier New'">Courier New</option><option value="Verdana" style="font-family:Verdana">Verdana</option></select></div>
             <div><label for="fontSize">Size</label><input id="fontSize" type="number" min="24" max="360" value="120"></div>
           </div>
           <div class="text-color-row"><label for="textColor">Text color</label><input id="textColor" type="color" value="#ffffff"><input id="textHex" value="#ffffff" maxlength="7" spellcheck="false" aria-label="Text color hex value"></div>

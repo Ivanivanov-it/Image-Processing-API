@@ -33,10 +33,11 @@
   const selectedLayer = () => state.layers.find((layer) => layer.id === state.selectedId) || null;
   const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const validHex = (value) => /^#[0-9a-f]{6}$/i.test(value);
+  const textFont = (layer) => `800 ${layer.fontSize}px ${JSON.stringify(layer.fontFamily)}`;
 
   function textBounds(layer) {
     context.save();
-    context.font = `800 ${layer.fontSize}px ${layer.fontFamily}`;
+    context.font = textFont(layer);
     const lines = layer.text.split("\n");
     const width = Math.max(1, ...lines.map((line) => context.measureText(line || " ").width));
     const height = Math.max(layer.fontSize, lines.length * layer.fontSize * 1.15);
@@ -50,7 +51,7 @@
 
   function drawText(layer) {
     context.save();
-    context.font = `800 ${layer.fontSize}px ${layer.fontFamily}`;
+    context.font = textFont(layer);
     context.textBaseline = "top";
     context.fillStyle = layer.color;
     layer.text.split("\n").forEach((line, index) => {
@@ -74,17 +75,15 @@
     context.setLineDash([20, 14]);
     context.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
     context.setLineDash([]);
-    if (layer.type === "image") {
-      Object.values(resizeHandles(bounds)).forEach((handle) => {
-        context.fillStyle = "#fffefa";
-        context.strokeStyle = "#1e7255";
-        context.lineWidth = 6;
-        context.beginPath();
-        context.arc(handle.x, handle.y, 24, 0, Math.PI * 2);
-        context.fill();
-        context.stroke();
-      });
-    }
+    Object.values(resizeHandles(bounds)).forEach((handle) => {
+      context.fillStyle = "#fffefa";
+      context.strokeStyle = "#1e7255";
+      context.lineWidth = 6;
+      context.beginPath();
+      context.arc(handle.x, handle.y, 24, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+    });
     context.restore();
   }
 
@@ -130,6 +129,7 @@
     $("fontSize").value = layer.fontSize;
     $("textColor").value = layer.color;
     $("textHex").value = layer.color;
+    $("fontFamily").style.fontFamily = layer.fontFamily;
   }
 
   function selectLayer(layer) {
@@ -147,10 +147,10 @@
       const scale = Math.min(maxWidth / image.naturalWidth, maxHeight / image.naturalHeight, minimumScale);
       const width = image.naturalWidth * scale;
       const height = image.naturalHeight * scale;
-      const layer = { id: uid(), type: "image", image, name: asset.original_name, x: (canvas.width - width) / 2, y: (canvas.height - height) / 2, w: width, h: height };
+      const layer = { id: uid(), type: "image", image, name: asset.display_name, x: (canvas.width - width) / 2, y: (canvas.height - height) / 2, w: width, h: height };
       state.layers.push(layer);
       selectLayer(layer);
-      notify(`${asset.original_name} added.`);
+      notify(`${asset.display_name} added.`);
     };
     image.onerror = () => notify("That image could not be loaded.", true);
     image.src = asset.preview_url;
@@ -182,7 +182,7 @@
   }
 
   function hitHandle(point, layer) {
-    if (!layer || layer.type !== "image") return null;
+    if (!layer) return null;
     const handles = resizeHandles(layerBounds(layer));
     return Object.keys(handles).find((name) => Math.hypot(point.x - handles[name].x, point.y - handles[name].y) <= 42) || null;
   }
@@ -192,7 +192,8 @@
     const current = selectedLayer();
     const handle = hitHandle(point, current);
     if (handle) {
-      state.gesture = { type: "resize", handle, start: point, layer: current, original: { x: current.x, y: current.y, w: current.w, h: current.h } };
+      const bounds = layerBounds(current);
+      state.gesture = { type: "resize", handle, start: point, layer: current, original: { ...bounds, fontSize: current.fontSize } };
     } else {
       const layer = hitLayer(point);
       selectLayer(layer);
@@ -211,12 +212,22 @@
     } else {
       const { original, handle, start } = state.gesture;
       const horizontal = handle.includes("e") ? point.x - start.x : start.x - point.x;
-      const width = Math.max(100, original.w + horizontal);
-      const height = width * original.h / original.w;
-      layer.w = width;
-      layer.h = height;
-      layer.x = handle.includes("w") ? original.x + original.w - width : original.x;
-      layer.y = handle.includes("n") ? original.y + original.h - height : original.y;
+      const desiredWidth = original.w + horizontal;
+      if (layer.type === "image") {
+        const width = Math.max(100, desiredWidth);
+        const height = width * original.h / original.w;
+        layer.w = width;
+        layer.h = height;
+        layer.x = handle.includes("w") ? original.x + original.w - width : original.x;
+        layer.y = handle.includes("n") ? original.y + original.h - height : original.y;
+      } else {
+        const scale = desiredWidth / Math.max(1, original.w);
+        layer.fontSize = Math.max(24, Math.min(360, Math.round(original.fontSize * scale)));
+        const resized = textBounds(layer);
+        layer.x = handle.includes("w") ? original.x + original.w - resized.w : original.x;
+        layer.y = handle.includes("n") ? original.y + original.h - resized.h : original.y;
+        $("fontSize").value = layer.fontSize;
+      }
     }
     render();
   });
@@ -231,20 +242,38 @@
       if (!response.ok) throw new Error("Could not load your image library.");
       const data = await response.json();
       const images = data.results || data;
+      const assets = images.flatMap((uploaded) => [
+        {
+          id: `original-${uploaded.id}`,
+          preview_url: uploaded.preview_url,
+          display_name: uploaded.original_name,
+          type_label: "Original",
+        },
+        ...(uploaded.operations || [])
+          .filter((operation) => operation.status === "completed" && operation.preview_url)
+          .map((operation) => ({
+            id: `operation-${operation.id}`,
+            preview_url: operation.preview_url,
+            display_name: operation.output_name || `${operation.operation_type} · ${uploaded.original_name}`,
+            type_label: "Processed",
+          })),
+      ]);
       $("assetLoading").hidden = true;
-      $("assetEmpty").hidden = images.length > 0;
-      images.forEach((asset) => {
+      $("assetEmpty").hidden = assets.length > 0;
+      assets.forEach((asset) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "asset-tile";
-        button.title = `Add ${asset.original_name}`;
+        button.title = `Add ${asset.display_name}`;
         const image = document.createElement("img");
         image.src = asset.preview_url;
-        image.alt = asset.original_name;
+        image.alt = asset.display_name;
         image.loading = "lazy";
         const name = document.createElement("span");
-        name.textContent = asset.original_name;
-        button.append(image, name);
+        name.textContent = asset.display_name;
+        const type = document.createElement("small");
+        type.textContent = asset.type_label;
+        button.append(image, type, name);
         button.addEventListener("click", () => addImage(asset));
         $("assetGrid").append(button);
       });
@@ -291,6 +320,7 @@
     if (!setColor(event.target.value, "text")) { event.target.value = $("textColor").value; notify("Enter a six-digit hex color, such as #ffffff.", true); }
   });
   ["textContent", "fontFamily", "fontSize"].forEach((id) => $(id).addEventListener("input", () => {
+    if (id === "fontFamily") $("fontFamily").style.fontFamily = $("fontFamily").value;
     const layer = selectedLayer();
     if (!layer || layer.type !== "text") return;
     layer.text = $("textContent").value || " ";
