@@ -57,6 +57,9 @@ class ProcessingTaskTests(TestCase):
         fake_session = object()
         def fake_remove(source, **kwargs):
             calls.update(kwargs)
+            calls["progress_percent"] = ImageOperation.objects.values_list(
+                "progress_percent", flat=True
+            ).get(pk=operation.pk)
             return source
         fake_new_session = Mock(return_value=fake_session)
         fake_module = SimpleNamespace(remove=fake_remove, new_session=fake_new_session)
@@ -70,4 +73,5 @@ class ProcessingTaskTests(TestCase):
         fake_new_session.assert_called_once_with("birefnet-general")
         self.assertIs(calls["session"], fake_session)
         self.assertTrue(calls["alpha_matting"])
+        self.assertEqual(calls["progress_percent"], 45)
         _background_session.cache_clear()

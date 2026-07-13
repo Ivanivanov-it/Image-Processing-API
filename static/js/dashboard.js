@@ -1,5 +1,5 @@
 (() => {
-  const state = { images: [], selectedId: null, operation: "resize", refreshing: false };
+  const state = { images: [], selectedId: null, operation: "resize", refreshing: false, optimisticOperations: [] };
   const $ = (id) => document.getElementById(id);
   const grid = $("imageGrid");
   const toast = $("toast");
@@ -145,16 +145,29 @@
     }
     meta.append(details);
     if (["pending", "processing"].includes(operation.status)) {
-      const percent = Math.max(0, Math.min(100, Number(operation.progress_percent) || 0));
+      const serverPercent = Math.max(0, Math.min(100, Number(operation.progress_percent) || 0));
+      const startedAt = Date.parse(operation.started_at || "");
+      const isEstimated = operation.operation_type === "remove_background"
+        && operation.status === "processing"
+        && serverPercent >= 25
+        && serverPercent < 85
+        && Number.isFinite(startedAt);
+      const elapsedSeconds = isEstimated ? Math.max(0, (Date.now() - startedAt) / 1000) : 0;
+      const estimate = isEstimated
+        ? Math.floor(serverPercent + (80 - serverPercent) * (1 - Math.exp(-elapsedSeconds / 60)))
+        : serverPercent;
+      const percent = isEstimated ? Math.min(80, Math.max(serverPercent, estimate)) : serverPercent;
       const progress = el("div", "processing-progress");
       const progressLabel = el("div", "progress-label");
-      progressLabel.append(el("span", "", operation.status === "pending" ? "Queued" : "Processing"), el("strong", "", `${percent}%`));
+      const labelText = operation.status === "pending" ? "Queued" : isEstimated ? "Estimated progress" : "Processing";
+      progressLabel.append(el("span", "", labelText), el("strong", "", `${isEstimated ? "~" : ""}${percent}%`));
       const track = el("div", "progress-track");
       track.setAttribute("role", "progressbar");
       track.setAttribute("aria-label", `${label} progress`);
       track.setAttribute("aria-valuemin", "0");
       track.setAttribute("aria-valuemax", "100");
       track.setAttribute("aria-valuenow", String(percent));
+      if (isEstimated) track.setAttribute("aria-valuetext", `Estimated ${percent} percent`);
       const fill = el("i");
       fill.style.width = `${percent}%`;
       track.append(fill);
@@ -182,14 +195,30 @@
     return card;
   }
 
+  function visibleOperations(image) {
+    const operations = [...image.operations];
+    state.optimisticOperations
+      .filter((pending) => pending.imageId === image.id)
+      .forEach((pending) => {
+        const hasServerOperation = operations.some((operation) => {
+          const createdAt = Date.parse(operation.created_at || "");
+          return operation.operation_type === pending.operation.operation_type
+            && Number.isFinite(createdAt)
+            && createdAt >= pending.startedAt - 2000;
+        });
+        if (!hasServerOperation) operations.unshift(pending.operation);
+      });
+    return operations;
+  }
+
   function renderImages() {
     grid.replaceChildren();
-    const outputCount = state.images.reduce((total, image) => total + image.operations.length, 0);
+    const outputCount = state.images.reduce((total, image) => total + visibleOperations(image).length, 0);
     $("imageCount").textContent = state.images.length + outputCount;
     $("emptyState").hidden = state.images.length > 0;
     state.images.forEach((image) => {
       grid.append(createOriginalCard(image));
-      image.operations.forEach((operation) => grid.append(createOutputCard(image, operation)));
+      visibleOperations(image).forEach((operation) => grid.append(createOutputCard(image, operation)));
     });
   }
 
@@ -258,13 +287,41 @@
       body.background_model = $("backgroundModel").value;
       body.refine_edges = $("refineEdges").checked;
     }
+    const optimisticId = `pending-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const optimistic = {
+      imageId: state.selectedId,
+      startedAt: Date.now(),
+      operation: {
+        id: optimisticId,
+        operation_type: state.operation,
+        status: "pending",
+        progress_percent: 0,
+        preview_url: null,
+        download_url: null,
+        error_message: "",
+      },
+    };
+    state.optimisticOperations.push(optimistic);
+    renderImages();
     $("processButton").disabled = true;
-    try { await api(`/api/images/${state.selectedId}/process/`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); notify("Processing started."); await refresh(); }
+    try {
+      await api(`/api/images/${optimistic.imageId}/process/`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      notify("Processing started.");
+      await refresh();
+    }
     catch (error) { notify(error.message, true); }
-    finally { $("processButton").disabled = !state.selectedId; }
+    finally {
+      state.optimisticOperations = state.optimisticOperations.filter((item) => item.operation.id !== optimisticId);
+      renderImages();
+    }
+    $("processButton").disabled = !state.selectedId;
   });
 
   updateOperationFields();
   refresh();
-  setInterval(() => { if (state.images.some((image) => image.operations.some((operation) => ["pending", "processing"].includes(operation.status)))) refresh(); }, 5000);
+  setInterval(() => {
+    const hasActiveOperation = state.optimisticOperations.length > 0
+      || state.images.some((image) => image.operations.some((operation) => ["pending", "processing"].includes(operation.status)));
+    if (hasActiveOperation) refresh();
+  }, 2000);
 })();

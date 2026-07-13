@@ -62,14 +62,20 @@ def _render_operation(operation):
         source = BytesIO()
         image.save(source, format="PNG")
         model_name = params.get("background_model", "birefnet-general")
-        image = Image.open(BytesIO(remove(
+        session = _background_session(model_name)
+        ImageOperation.objects.filter(pk=operation.pk).update(progress_percent=45)
+        operation.progress_percent = 45
+        removed = remove(
             source.getvalue(),
-            session=_background_session(model_name),
+            session=session,
             alpha_matting=params.get("refine_edges", True),
             alpha_matting_foreground_threshold=240,
             alpha_matting_background_threshold=10,
             alpha_matting_erode_size=10,
-        )))
+        )
+        ImageOperation.objects.filter(pk=operation.pk).update(progress_percent=75)
+        operation.progress_percent = 75
+        image = Image.open(BytesIO(removed))
         image.load()
         output_format = "PNG"
     elif operation_type == ImageOperation.OperationType.WATERMARK:
