@@ -209,3 +209,7 @@ class AuthenticationAndDashboardTests(TestCase):
         self.assertContains(response, 'id="assetGrid"')
         self.assertContains(response, 'id="emojiGrid"')
         self.assertContains(response, 'id="downloadThumbnail"')
+        self.assertContains(response, 'id="layersList"')
+        self.assertContains(response, 'id="layerOpacity"')
+        self.assertContains(response, 'id="bringFront"')
+        self.assertContains(response, 'id="outlineWidth"')

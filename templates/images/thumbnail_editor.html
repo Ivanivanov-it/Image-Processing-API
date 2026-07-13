@@ -64,12 +64,36 @@
             <div><label for="fontSize">Size</label><input id="fontSize" type="number" min="24" max="360" value="120"></div>
           </div>
           <div class="text-color-row"><label for="textColor">Text color</label><input id="textColor" type="color" value="#ffffff"><input id="textHex" value="#ffffff" maxlength="7" spellcheck="false" aria-label="Text color hex value"></div>
+          <div class="text-effects">
+            <div><label for="outlineWidth">Outline</label><input id="outlineWidth" type="range" min="0" max="24" value="0"><output id="outlineOutput">0 px</output></div>
+            <div class="outline-color"><label for="outlineColor">Outline color</label><input id="outlineColor" type="color" value="#000000"></div>
+            <label class="effect-check"><input id="textShadow" type="checkbox"><span>Drop shadow</span></label>
+          </div>
           <button id="addText" class="button secondary wide-control" type="button">Add text layer <span>＋</span></button>
         </section>
 
         <section class="control-section">
           <div class="control-title"><div><p class="eyebrow">Expression</p><h2>Emoji</h2></div><span class="emoji-note">Unicode</span></div>
           <div id="emojiGrid" class="emoji-grid" aria-label="Emoji picker"></div>
+        </section>
+
+        <section class="control-section layer-manager-section">
+          <div class="control-title"><div><p class="eyebrow">Composition</p><h2>Layers</h2></div><span class="emoji-note">Top first</span></div>
+          <p class="layer-help">Select a layer, or drag rows to change which one appears on top.</p>
+          <div id="layersEmpty" class="layer-empty">Add an image, text, or emoji to begin.</div>
+          <div id="layersList" class="layers-list" aria-label="Canvas layers"></div>
+          <div class="selected-tools">
+            <div class="opacity-control"><label for="layerOpacity">Opacity</label><input id="layerOpacity" type="range" min="10" max="100" value="100" disabled><output id="opacityOutput">100%</output></div>
+            <div class="tool-button-grid">
+              <button id="bringFront" type="button" disabled>Bring to front</button>
+              <button id="sendBack" type="button" disabled>Send to back</button>
+              <button id="duplicateLayer" type="button" disabled>Duplicate</button>
+              <button id="centerHorizontal" type="button" disabled>Center ↔</button>
+              <button id="centerVertical" type="button" disabled>Center ↕</button>
+              <button id="flipHorizontal" type="button" disabled>Flip ↔</button>
+              <button id="flipVertical" type="button" disabled>Flip ↕</button>
+            </div>
+          </div>
         </section>
 
         <section class="layer-actions">
