@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sign in · PixelForge{% endblock %}
+{% block body %}
+<main class="auth-shell">
+  <section class="auth-story">
+    <a class="brand" href="/"><span class="brand-mark">P</span> PixelForge</a>
+    <div>
+      <p class="eyebrow">Your private image workshop</p>
+      <h1>Polish every pixel.<br><span>Keep every original.</span></h1>
+      <p class="auth-copy">Resize, compress, convert, watermark, and prepare production-ready images from one calm workspace.</p>
+    </div>
+    <p class="tiny">Built for fast, secure background processing.</p>
+  </section>
+  <section class="auth-panel">
+    <form method="post" class="auth-card">
+      {% csrf_token %}
+      <p class="eyebrow">Welcome back</p>
+      <h2>Sign in to your studio</h2>
+      {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors|striptags }}</div>{% endif %}
+      <label for="id_username">Username</label>
+      <input id="id_username" name="username" autocomplete="username" required autofocus>
+      <label for="id_password">Password</label>
+      <input id="id_password" name="password" type="password" autocomplete="current-password" required>
+      <button class="button primary wide" type="submit">Enter workspace <span>→</span></button>
+      <p class="auth-switch">New to PixelForge? <a href="{% url 'signup' %}">Create an account</a></p>
+    </form>
+  </section>
+</main>
+{% endblock %}

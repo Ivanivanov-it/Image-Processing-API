@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Create account · PixelForge{% endblock %}
+{% block body %}
+<main class="auth-shell">
+  <section class="auth-story">
+    <a class="brand" href="/"><span class="brand-mark">P</span> PixelForge</a>
+    <div>
+      <p class="eyebrow">A better image pipeline</p>
+      <h1>Make room for<br><span>better work.</span></h1>
+      <p class="auth-copy">Create your private studio. Every upload is isolated to your account and automatically expires.</p>
+    </div>
+    <p class="tiny">250 MB included in this portfolio demo.</p>
+  </section>
+  <section class="auth-panel">
+    <form method="post" class="auth-card">
+      {% csrf_token %}
+      <p class="eyebrow">Start creating</p>
+      <h2>Create your account</h2>
+      {% if form.errors %}<div class="alert error">Please correct the fields below.</div>{% endif %}
+      {% for field in form %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<small>{{ field.help_text|safe }}</small>{% endif %}
+        {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      {% endfor %}
+      <button class="button primary wide" type="submit">Create workspace <span>→</span></button>
+      <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+    </form>
+  </section>
+</main>
+{% endblock %}

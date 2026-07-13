@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Workspace · PixelForge{% endblock %}
+{% block body %}
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">P</span> PixelForge</a>
+    <div class="top-actions">
+      <div class="quota-compact"><span id="quotaLabel">Loading storage…</span><div class="quota-track"><i id="quotaBar"></i></div></div>
+      <span class="avatar">{{ request.user.username|first|upper }}</span>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="icon-button" title="Sign out" aria-label="Sign out">↗</button></form>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="hero-row">
+      <div><p class="eyebrow">Image workspace</p><h1>Good {{ request.user.username }},<br><span>what are we making?</span></h1></div>
+      <div class="hero-stat"><strong id="imageCount">0</strong><span>images in your studio</span></div>
+    </section>
+
+    <section class="studio-grid">
+      <div class="main-column">
+        <form id="uploadForm" class="dropzone" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input id="fileInput" name="files" type="file" accept="image/png,image/jpeg" multiple hidden>
+          <button type="button" id="chooseFiles" class="drop-inner">
+            <span class="upload-orb">↑</span>
+            <strong>Drop your images here</strong>
+            <span>or click to browse · PNG and JPEG · up to 15 MB each</span>
+          </button>
+        </form>
+
+        <div class="section-heading"><div><p class="eyebrow">Recent work</p><h2>Your images</h2></div><select id="ordering" aria-label="Sort images"><option value="-created_at">Newest first</option><option value="created_at">Oldest first</option><option value="-updated_at">Recently updated</option></select></div>
+        <div id="emptyState" class="empty-state" hidden><span>◇</span><h3>Your canvas is clear</h3><p>Upload a PNG or JPEG to begin.</p></div>
+        <div id="imageGrid" class="image-grid"></div>
+      </div>
+
+      <aside class="tool-panel">
+        <div class="panel-heading"><p class="eyebrow">Transformation</p><h2>Shape your output</h2><p id="selectedName">Select an image from your studio.</p></div>
+        <form id="processForm">
+          <label>Operation</label>
+          <div class="operation-grid" id="operationGrid">
+            <button type="button" data-op="resize" class="active"><span>↔</span>Resize</button>
+            <button type="button" data-op="webp"><span>W</span>WebP</button>
+            <button type="button" data-op="thumbnail"><span>▣</span>Thumbnail</button>
+            <button type="button" data-op="compress"><span>≋</span>Compress</button>
+            <button type="button" data-op="remove_metadata"><span>⌫</span>Metadata</button>
+            <button type="button" data-op="watermark"><span>✦</span>Watermark</button>
+            <button type="button" data-op="remove_background" class="full"><span>◐</span>Remove background</button>
+          </div>
+          <div id="dimensions" class="field-row"><div><label for="width">Width</label><input id="width" type="number" min="1" max="8000" placeholder="1200"></div><span>×</span><div><label for="height">Height</label><input id="height" type="number" min="1" max="8000" placeholder="800"></div></div>
+          <div id="watermarkField" hidden><label for="watermarkText">Watermark text</label><input id="watermarkText" maxlength="120" placeholder="© Your studio"></div>
+          <div id="backgroundFields" hidden>
+            <label for="backgroundModel">Removal model</label>
+            <select id="backgroundModel">
+              <option value="birefnet-general">BiRefNet general · best quality</option>
+              <option value="birefnet-portrait">BiRefNet portrait · people & hair</option>
+              <option value="isnet-anime">IS-Net anime · illustrations</option>
+              <option value="birefnet-general-lite">BiRefNet lite · faster</option>
+            </select>
+            <label class="check-row"><input id="refineEdges" type="checkbox" checked><span><strong>Refine soft edges</strong><small>Uses alpha matting for hair, fur, and translucent edges.</small></span></label>
+          </div>
+          <div id="qualityField"><div class="range-label"><label for="quality">Quality</label><output id="qualityOutput">82%</output></div><input id="quality" type="range" min="1" max="95" value="82"></div>
+          <button id="processButton" class="button primary wide" disabled>Process image <span>→</span></button>
+        </form>
+        <div class="privacy-note"><span>⌁</span><p><strong>Private by default</strong>Your files are isolated to your account and expire automatically.</p></div>
+      </aside>
+    </section>
+  </main>
+</div>
+<dialog id="imagePreviewDialog" class="image-lightbox" aria-labelledby="previewTitle" aria-describedby="previewDetails">
+  <div class="lightbox-panel">
+    <div class="lightbox-heading">
+      <div><p class="eyebrow">Full preview</p><h2 id="previewTitle"></h2><p id="previewDetails"></p></div>
+      <button id="closePreview" class="lightbox-close" type="button" aria-label="Close image preview">&times;</button>
+    </div>
+    <div class="lightbox-canvas"><img id="previewImage" alt=""></div>
+    <div class="lightbox-actions">
+      <button id="selectFromPreview" class="button primary" type="button" hidden>Select for processing <span>&rarr;</span></button>
+      <a id="downloadFromPreview" class="button primary" href="#" hidden>Download image <span>&darr;</span></a>
+    </div>
+  </div>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
