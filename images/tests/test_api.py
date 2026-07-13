@@ -196,3 +196,16 @@ class AuthenticationAndDashboardTests(TestCase):
         self.assertContains(response, 'id="imagePreviewDialog"')
         self.assertContains(response, 'id="selectFromPreview"')
         self.assertContains(response, 'id="downloadFromPreview"')
+
+    def test_thumbnail_creator_requires_login_and_renders_editor(self):
+        response = self.client.get("/thumbnail-creator/")
+        self.assertRedirects(response, "/accounts/login/?next=/thumbnail-creator/")
+        user = User.objects.create_user("thumbnail-user", password="portfolio-safe-password-918!")
+        self.client.force_login(user)
+        response = self.client.get("/thumbnail-creator/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="thumbnailCanvas"')
+        self.assertContains(response, 'id="presetPicker"')
+        self.assertContains(response, 'id="assetGrid"')
+        self.assertContains(response, 'id="emojiGrid"')
+        self.assertContains(response, 'id="downloadThumbnail"')

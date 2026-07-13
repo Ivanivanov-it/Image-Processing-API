@@ -6,6 +6,7 @@
   <header class="topbar">
     <a class="brand" href="/"><span class="brand-mark">P</span> PixelForge</a>
     <div class="top-actions">
+      <a class="button header-tool-link" href="{% url 'thumbnail-creator' %}">Thumbnail creator</a>
       <div class="quota-compact"><span id="quotaLabel">Loading storage…</span><div class="quota-track"><i id="quotaBar"></i></div></div>
       <span class="avatar">{{ request.user.username|first|upper }}</span>
       <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="icon-button" title="Sign out" aria-label="Sign out">↗</button></form>

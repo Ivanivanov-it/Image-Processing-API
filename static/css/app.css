@@ -40,6 +40,7 @@ input:focus,select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(
 .alert { padding:12px; border-radius:10px; margin-bottom:15px; font-size:13px; }.alert.error { background:#fbe7e4; color:#842f2f; }
 .topbar { height:78px; padding:0 clamp(22px,5vw,76px); display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(23,35,31,.08); background:rgba(245,243,237,.82); backdrop-filter:blur(16px); position:sticky; top:0; z-index:10; }
 .top-actions { display:flex; align-items:center; gap:15px; }
+.header-tool-link { padding:9px 13px; color:var(--green); background:#eaf4ee; text-decoration:none; font-size:12px; white-space:nowrap; }
 .quota-compact { width:170px; color:var(--muted); font-size:11px; text-align:right; }
 .quota-track { height:4px; background:#d8ddd6; border-radius:5px; margin-top:6px; overflow:hidden; }.quota-track i { display:block; height:100%; width:0; background:var(--green); transition:width .4s; }
 .avatar { width:36px; height:36px; display:grid; place-items:center; color:var(--green); background:var(--mint); border-radius:50%; font-weight:800; }

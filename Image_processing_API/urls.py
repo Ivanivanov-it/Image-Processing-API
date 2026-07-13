@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from images.views import DashboardView, SignupView, temporary_download
+from images.views import DashboardView, SignupView, ThumbnailEditorView, temporary_download
 
 urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
+    path('thumbnail-creator/', ThumbnailEditorView.as_view(), name='thumbnail-creator'),
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', SignupView.as_view(), name='signup'),

@@ -32,6 +32,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "images/dashboard.html"
 
 
+class ThumbnailEditorView(LoginRequiredMixin, TemplateView):
+    template_name = "images/thumbnail_editor.html"
+
+
 class SignupView(FormView):
     template_name = "registration/signup.html"
     form_class = UserCreationForm

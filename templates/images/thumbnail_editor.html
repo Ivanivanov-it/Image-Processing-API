@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Thumbnail Creator · PixelForge{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/thumbnail_editor.css' %}">{% endblock %}
+{% block body %}
+<div class="app-shell creator-shell">
+  <header class="topbar">
+    <a class="brand" href="{% url 'dashboard' %}"><span class="brand-mark">P</span> PixelForge</a>
+    <div class="top-actions">
+      <a class="button header-tool-link active" href="{% url 'thumbnail-creator' %}">Thumbnail creator</a>
+      <a class="button header-tool-link" href="{% url 'dashboard' %}">Your images</a>
+      <span class="avatar">{{ request.user.username|first|upper }}</span>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="icon-button" title="Sign out" aria-label="Sign out">↗</button></form>
+    </div>
+  </header>
+
+  <main class="creator-workspace">
+    <section class="creator-intro">
+      <div><p class="eyebrow">Thumbnail creation</p><h1>Build a scroll-stopping cover.</h1><p>Compose your own images, text, color, and emoji. Drag any layer to position it.</p></div>
+      <button id="downloadThumbnail" class="button primary export-button" type="button">Download PNG <span>↓</span></button>
+    </section>
+
+    <section class="creator-layout">
+      <aside class="creator-sidebar asset-sidebar">
+        <div class="sidebar-heading"><p class="eyebrow">Your library</p><h2>Add an image</h2><p>Choose any original from your profile.</p></div>
+        <div id="assetLoading" class="asset-message">Loading your images…</div>
+        <div id="assetEmpty" class="asset-message" hidden>No uploaded images yet. Add images from the workspace first.</div>
+        <div id="assetGrid" class="asset-grid"></div>
+      </aside>
+
+      <div class="creator-stage-column">
+        <div id="presetPicker" class="preset-picker" aria-label="Thumbnail size">
+          <button type="button" class="active" data-preset="tiktok"><span>♪</span><strong>TikTok Short</strong><small>1080 × 1920</small></button>
+          <button type="button" data-preset="instagram"><span>◎</span><strong>Instagram Reel</strong><small>1080 × 1920</small></button>
+          <button type="button" data-preset="youtube"><span>▶</span><strong>YouTube Short</strong><small>1080 × 1920</small></button>
+        </div>
+        <div class="canvas-frame">
+          <canvas id="thumbnailCanvas" width="1080" height="1920" aria-label="Thumbnail editing canvas"></canvas>
+        </div>
+        <p class="canvas-help"><span>Drag</span> to move · <span>Corner handles</span> resize images · <span>Delete</span> removes a selected layer</p>
+      </div>
+
+      <aside class="creator-sidebar controls-sidebar">
+        <section class="control-section">
+          <div class="control-title"><div><p class="eyebrow">Canvas</p><h2>Background</h2></div><label class="guide-toggle"><input id="showGuides" type="checkbox" checked> Safe area</label></div>
+          <div id="backgroundSwatches" class="color-swatches" aria-label="Background color presets">
+            <button type="button" data-color="#17231f" style="--swatch:#17231f" aria-label="Forest black"></button>
+            <button type="button" data-color="#fff3df" style="--swatch:#fff3df" aria-label="Warm cream"></button>
+            <button type="button" data-color="#ff4d6d" style="--swatch:#ff4d6d" aria-label="Vibrant pink"></button>
+            <button type="button" data-color="#6c5ce7" style="--swatch:#6c5ce7" aria-label="Purple"></button>
+            <button type="button" data-color="#00b894" style="--swatch:#00b894" aria-label="Green"></button>
+            <button type="button" data-color="#0984e3" style="--swatch:#0984e3" aria-label="Blue"></button>
+            <button type="button" data-color="#f9ca24" style="--swatch:#f9ca24" aria-label="Yellow"></button>
+            <button type="button" data-color="#111111" style="--swatch:#111111" aria-label="Black"></button>
+          </div>
+          <div class="color-input-row"><input id="backgroundColor" type="color" value="#17231f" aria-label="Background color"><input id="backgroundHex" value="#17231f" maxlength="7" spellcheck="false" aria-label="Background hex value"></div>
+        </section>
+
+        <section class="control-section">
+          <p class="eyebrow">Typography</p><h2>Add text</h2>
+          <textarea id="textContent" rows="2" maxlength="160" placeholder="Your headline"></textarea>
+          <div class="text-control-grid">
+            <div><label for="fontFamily">Font</label><select id="fontFamily"><option value="Impact">Impact</option><option value="Manrope">Manrope</option><option value="DM Sans">DM Sans</option><option value="Arial Black">Arial Black</option><option value="Trebuchet MS">Trebuchet</option><option value="Georgia">Georgia</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option></select></div>
+            <div><label for="fontSize">Size</label><input id="fontSize" type="number" min="24" max="360" value="120"></div>
+          </div>
+          <div class="text-color-row"><label for="textColor">Text color</label><input id="textColor" type="color" value="#ffffff"><input id="textHex" value="#ffffff" maxlength="7" spellcheck="false" aria-label="Text color hex value"></div>
+          <button id="addText" class="button secondary wide-control" type="button">Add text layer <span>＋</span></button>
+        </section>
+
+        <section class="control-section">
+          <div class="control-title"><div><p class="eyebrow">Expression</p><h2>Emoji</h2></div><span class="emoji-note">Unicode</span></div>
+          <div id="emojiGrid" class="emoji-grid" aria-label="Emoji picker"></div>
+        </section>
+
+        <section class="layer-actions">
+          <button id="moveForward" type="button" disabled>Move forward</button>
+          <button id="moveBackward" type="button" disabled>Move backward</button>
+          <button id="deleteLayer" type="button" class="danger" disabled>Delete layer</button>
+        </section>
+      </aside>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="{% static 'js/thumbnail_editor.js' %}"></script>
+{% endblock %}
